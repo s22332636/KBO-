@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>풀카운트 - KBO 야구장 좌석 추천</title>
+    <style>
+        :root {
+            --primary-color: #071d49; /* 야구 베이스 네이비 */
+            --accent-color: #e5001a;  /* 포인트 레드 */
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #1e3a8a);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        header h1 { margin: 0; font-size: 2.4rem; letter-spacing: -1px; }
+        header p { margin: 8px 0 0 0; opacity: 0.8; font-size: 1.05rem; }
+
+        main { max-width: 550px; margin: 30px auto; padding: 0 20px; }
+
+        .app-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-group { margin-bottom: 24px; }
+        label { display: block; font-weight: 700; margin-bottom: 10px; color: #334155; font-size: 1.1rem; }
+        
+        select {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            background-color: #fff;
+            color: var(--text-color);
+        }
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(7, 29, 73, 0.08);
+        }
+
+        button {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(7, 29, 73, 0.15);
+        }
+        button:hover { background: #132d65; transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+
+        .result-box {
+            margin-top: 30px;
+            padding: 30px;
+            border-radius: 16px;
+            background-color: #f1f5f9;
+            border-left: 6px solid var(--accent-color);
+            display: none;
+        }
+        .result-box.active { 
+            display: block; 
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        
+        .result-tag {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .seat-title { font-size: 2rem; font-weight: 800; color: var(--accent-color); margin: 5px 0 15px 0; }
+        .seat-desc { color: #334155; font-size: 1.05rem; margin: 0; line-height: 1.7; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🏟️ 풀카운트 좌석 가이드</h1>
+        <p>구장과 관람 스타일을 선택하면 최적의 명당을 골라드려요</p>
+    </header>
+
+    <main>
+        <div class="app-card">
+            <!-- 1. 구장 선택 -->
+            <div class="form-group">
+                <label for="stadium">방문할 야구장 선택</label>
+                <select id="stadium">
+                    <option value="SSG">SSG 랜더스 (인천 랜더스필드)</option>
+                    <option value="LG_두산">LG 트윈스 / 두산 베어스 (잠실야구장)</option>
+                    <option value="KT">kt 위즈 (수원 위즈파크)</option>
+                    <option value="NC">NC 다이노스 (창원 파크)</option>
+                    <option value="KIA">KIA 타이거즈 (광주 챔피언스필드)</option>
+                    <option value="롯데">롯데 자이언츠 (사직야구장)</option>
+                    <option value="삼성">삼성 라이온즈 (대구 라팍)</option>
+                    <option value="한화">한화 이글스 (대전 이글스파크)</option>
+                    <option value="키움">키움 히어로즈 (고척스카이돔)</option>
+                </select>
+            </div>
+
+            <!-- 2. 목적 선택 -->
+            <div class="form-group">
+                <label for="purpose">오늘 직관의 가장 중요한 목적은?</label>
+                <select id="purpose">
+                    <option value="cheer">🔥 목이 터져라 팀 응원가를 부르고 싶다</option>
+                    <option value="view">⚾ 전체적인 경기 흐름을 조용하고 넓게 보고 싶다</option>
+                    <option value="family">👨‍👩‍👧‍👦 가족/연인과 음식을 편하게 먹으며 보고 싶다</option>
+                    <option value="cheap">💸 티켓 값 부담이 없는 가성비 좌석이 좋다</option>
+                    <option value="player">👀 선수들의 역동적인 플레이를 코앞에서 보고 싶다</option>
+                    <option value="meat">🥩 야구장에서 고기를 구워 먹는 이색 체험을 원한다</option>
+                </select>
+            </div>
+
+            <button type="button" onclick="recommendSeat()">나에게 딱 맞는 추천 좌석 보기</button>
+
+            <!-- 3. 결과 창 (한 화면에서 바로 아래에 뜸) -->
+            <div id="result-box" class="result-box">
+                <div id="result-tag" class="result-tag">인천 랜더스필드 추천</div>
+                <div id="seat-title" class="seat-title">응원지정석</div>
+                <p id="seat-desc" class="seat-desc"></p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function recommendSeat() {
+            const stadiumSelect = document.getElementById('stadium');
+            const purpose = document.getElementById('purpose').value;
+            
+            const resultBox = document.getElementById('result-box');
+            const resultTag = document.getElementById('result-tag');
+            const seatTitle = document.getElementById('seat-title');
+            const seatDesc = document.getElementById('seat-desc');
+
+            // 선택한 구장의 깔끔한 텍스트 이름 추출 (예: "SSG 랜더스")
+            const stadiumName = stadiumSelect.options[stadiumSelect.selectedIndex].text.split(' (')[0];
+            resultTag.textContent = `${stadiumName} 추천 명당`;
+
+            let seat = "";
+            let desc = "";
+
+            // 심플한 목적별 매칭 조건문
+            switch(purpose) {
+                case "cheer":
+                    seat = "응원지정석";
+                    desc = "홈팀/원정팀 응원단상이 바로 앞에 위치한 구역입니다. 치어리더, 응원단장과 호흡하며 경기 내내 서서 열정적으로 소리 지르고 춤추며 스트레스를 날릴 수 있는 최고의 핫스팟입니다.";
+                    break;
+                case "view":
+                    seat = "중앙 네이비석 / 3층 전면 지정석";
+                    desc = "포수 바로 뒷편, 위에서 아래로 내려다보는 탁 트인 시야의 좌석입니다. 투수의 볼 끝 궤적과 수비수들의 포메이션 이동 등 야구 본연의 전술과 흐름을 가장 완벽하게 분석하며 조용히 직관하기 좋습니다.";
+                    break;
+                case "family":
+                    seat = "내야 테이블석";
+                    desc = "개인 또는 다인용 테이블이 눈앞에 구비된 최고 인기 좌석입니다. 치킨, 피자, 떡볶이 등 다양한 야구장 별미들을 마음껏 펼쳐두고, 가족이나 연인과 대화를 나누며 가장 안락하고 대접받는 느낌으로 관람할 수 있습니다.";
+                    break;
+                case "cheap":
+                    seat = "외야 일반석 / 자유석";
+                    desc = "지갑이 가벼워도 부담 없이 야구장 분위기를 100% 즐길 수 있는 가성비 구역입니다. 넓고 탁 트인 외야 정취 속에서 비교적 자유롭게 앉을 수 있으며, 운이 좋으면 경기 중 홈런공을 직접 잡는 짜릿한 행운의 주인공이 될 수도 있습니다.";
+                    break;
+                case "player":
+                    seat = "익사이팅존 / 라이브존";
+                    desc = "그라운드 잔디 높이와 눈높이가 거의 일치하는 초밀착형 좌석입니다. 파울 타구의 아찔함은 물론, 덕아웃 선수들의 목소리, 야수들의 거친 슬라이딩과 베이스 러닝을 마치 내가 경기장에 뛰고 있는 듯한 생생한 타격감으로 즐길 수 있습니다.";
+                    break;
+                case "meat":
+                    // 바비큐존 특화 구장 조건 처리
+                    const currentStadium = stadiumSelect.value;
+                    if(currentStadium === "SSG" || currentStadium === "한화") {
+                        seat = "외야 바비큐존";
+                        desc = "해당 구장만의 독보적인 시그니처 특화석입니다! 경기장에 구비된 인프라를 이용해 삼겹살 등을 직접 지글지글 구워 먹으며 야구를 보는 짜릿하고 이색적인 미식 직관이 가능합니다. 예매 경쟁이 치열하니 서두르세요!";
+                    } else {
+                        seat = "외야 잔디석 / 그린존";
+                        desc = "선택하신 구장에는 불을 쓰는 공식 바비큐존은 운영되지 않습니다. 하지만 대안으로 돗자리를 편하게 깔고 누워서 맛있는 배달 음식을 피크닉 온 것처럼 자유롭게 먹으며 힐링할 수 있는 잔디석을 강력 추천합니다!";
+                    }
+                    break;
+            }
+
+            // 결과 채워넣고 등장 애니메이션 켜기
+            seatTitle.textContent = seat;
+            seatDesc.innerHTML = desc;
+            
+            resultBox.classList.add('active');
+            
+            // 화면 부드럽게 결과창으로 스크롤 이동
+            resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
